@@ -1,0 +1,12 @@
+scan:
+  paths:
+    - .
+ignore:
+  - "**/*.test.ts"
+  - "package-lock.json"
+rules:
+  entropy:
+    enabled: true
+    threshold: 4.0
+output:
+  maskSecrets: true

@@ -1,0 +1,24 @@
+{
+  "name": "envguard",
+  "version": "1.0.0",
+  "description": "Privacy-first local secret detection and Git protection toolkit.",
+  "license": "MIT",
+  "type": "module",
+  "bin": { "envguard": "./dist/index.js" },
+  "files": ["dist", "README.md", "LICENSE"],
+  "engines": { "node": ">=20.11.0" },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "keywords": ["security", "secrets", "git", "scanner", "privacy"],
+  "repository": { "type": "git", "url": "https://github.com/your-account/envguard.git" },
+  "bugs": { "url": "https://github.com/your-account/envguard/issues" },
+  "dependencies": { "commander": "^13.1.0", "ignore": "^7.0.5", "yaml": "^2.7.1" },
+  "devDependencies": { "@eslint/js": "^9.22.0", "@types/node": "^22.13.14", "eslint": "^9.22.0", "prettier": "^3.5.3", "typescript": "^5.8.2", "typescript-eslint": "^8.26.0", "vitest": "^3.1.1" }
+}
