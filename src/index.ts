@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import ignore from 'ignore';
 import { loadConfig } from './config/load.js';
 import { initialize } from './fixer/init.js';
-import { installHook } from './git/hook.js';
+import { installHook, uninstallHook } from './git/hook.js';
 import { scanHistory } from './git/history.js';
 import { stagedContent, stagedFiles } from './git/git.js';
 import { terminalReport, sarifReport } from './reporter/report.js';
@@ -23,7 +23,7 @@ function fail(error: unknown): void {
 }
 async function scanAction(
   paths: string[],
-  opts: { json?: boolean; sarif?: boolean; staged?: boolean },
+  opts: { json?: boolean; sarif?: boolean; staged?: boolean; verbose?: boolean },
 ): Promise<void> {
   const config = loadConfig(root);
   let result: ScanResult;
@@ -47,7 +47,7 @@ async function scanAction(
       ? JSON.stringify(sarifReport(result), null, 2)
       : opts.json
         ? JSON.stringify(result, null, 2)
-        : terminalReport(result),
+        : terminalReport(result, opts.verbose),
   );
   exitFor(result);
 }
@@ -55,7 +55,7 @@ const program = new Command();
 program
   .name('envguard')
   .description('Protect your secrets before they reach Git. All scans run locally.')
-  .version('1.0.0')
+  .version('1.1.0')
   .showSuggestionAfterError();
 program
   .command('scan [paths...]')
@@ -63,6 +63,7 @@ program
   .option('--json', 'print versioned JSON without raw secrets')
   .option('--sarif', 'print SARIF 2.1.0 without raw secrets')
   .option('--staged', 'scan staged Git content only (for hooks)')
+  .option('--verbose', 'include skipped-file and non-fatal read warnings')
   .action(async (paths, opts) => {
     try {
       await scanAction(paths, opts);
@@ -87,10 +88,20 @@ program
   });
 program
   .command('install-hook')
-  .description('Install the local Git pre-commit hook; backs up a custom hook.')
+  .description('Install the local Git pre-commit hook; preserves a custom hook.')
   .action(async () => {
     try {
       console.log(`EnvGuard hook installed: ${await installHook(root)}`);
+    } catch (error) {
+      fail(error);
+    }
+  });
+program
+  .command('uninstall-hook')
+  .description('Remove the EnvGuard hook and restore a preserved custom hook.')
+  .action(async () => {
+    try {
+      console.log(await uninstallHook(root));
     } catch (error) {
       fail(error);
     }

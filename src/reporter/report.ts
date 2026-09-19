@@ -6,13 +6,23 @@ const level: Record<Finding['severity'], string> = {
   low: 'LOW',
   info: 'INFO',
 };
-export function terminalReport(result: ScanResult): string {
-  if (result.findings.length === 0)
-    return `EnvGuard scan passed: ${result.scannedFiles} file(s) scanned.`;
+export function terminalReport(result: ScanResult, verbose = false): string {
+  const summary = `Scanned: ${result.scannedFiles} file(s).${verbose ? ` Skipped: ${result.skippedFiles}.` : ''}`;
+  if (result.findings.length === 0) {
+    const errors =
+      verbose && result.errors.length
+        ? `\nWarnings:\n${result.errors.map((error) => `  - ${error}`).join('\n')}`
+        : '';
+    return `EnvGuard scan passed. ${summary}${errors}`;
+  }
   const rows = result.findings.map(
     (f) => `${f.file}:${f.line}\n  ${f.type} [${level[f.severity]}]\n  Value: ${f.maskedValue}`,
   );
-  return `EnvGuard found ${result.findings.length} possible secret(s).\n${rows.join('\n')}\n\nRotate or revoke exposed credentials, remove them from source, and prevent future commits.`;
+  const errors =
+    verbose && result.errors.length
+      ? `\nWarnings:\n${result.errors.map((error) => `  - ${error}`).join('\n')}`
+      : '';
+  return `EnvGuard found ${result.findings.length} possible secret(s). ${summary}\n${rows.join('\n')}\n\nRotate or revoke exposed credentials, remove them from source, and prevent future commits.${errors}`;
 }
 export function sarifReport(result: ScanResult): object {
   const rules = [...new Map(result.findings.map((f) => [f.ruleId, f])).values()].map((f) => ({

@@ -18,6 +18,22 @@ export const patternRules: Rule[] = [
     pattern: /\bgh[pousr]_[A-Za-z0-9_]{20,255}\b/g,
   },
   {
+    id: 'gitlab-token',
+    description: 'Potential GitLab personal, project, or runner token',
+    type: 'Possible GitLab Token',
+    severity: 'critical',
+    category: 'pattern',
+    pattern: /\bgl(?:pat|proj|rt)-[A-Za-z0-9_-]{20,}\b/g,
+  },
+  {
+    id: 'npm-token',
+    description: 'Potential npm access token',
+    type: 'Possible npm Token',
+    severity: 'critical',
+    category: 'pattern',
+    pattern: /\bnpm_[A-Za-z0-9]{36}\b/g,
+  },
+  {
     id: 'google-api-key',
     description: 'Potential Google API key',
     type: 'Possible Google API Key',
@@ -64,5 +80,13 @@ export const patternRules: Rule[] = [
     severity: 'high',
     category: 'pattern',
     pattern: /\bBearer\s+[A-Za-z0-9._~+/-]{20,}/g,
+  },
+  {
+    id: 'database-connection-string',
+    description: 'Potential database connection string',
+    type: 'Possible Database Connection String',
+    severity: 'critical',
+    category: 'pattern',
+    pattern: /\b(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?|redis):\/\/[^\s"'`]{8,}/gi,
   },
 ];

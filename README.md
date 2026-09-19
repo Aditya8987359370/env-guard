@@ -17,6 +17,7 @@ EnvGuard is a free, open-source command-line tool that helps developers find pos
 - Check Git history for credentials that may already have been committed.
 - Use JSON in scripts and SARIF in GitHub Code Scanning.
 - Tune ignores, disabled rules, file-size limits, and entropy sensitivity.
+- Inspect skipped files and non-fatal read warnings with `--verbose`.
 - Work without accounts, telemetry, external APIs, databases, or AI keys.
 
 ## Install and run
@@ -49,7 +50,9 @@ envguard init                 # Creates only missing safe starter files
 envguard scan .               # Scans the current project
 envguard scan --json          # Prints redacted, machine-readable JSON
 envguard scan --sarif         # Prints redacted SARIF 2.1.0
+envguard scan --verbose       # Shows skipped-file and read-warning details
 envguard install-hook         # Installs local pre-commit protection
+envguard uninstall-hook       # Restores the previous hook, when one was saved
 envguard history --all        # Scans reachable Git history
 envguard rules                # Lists built-in rules and severities
 envguard fix                  # Shows safe remediation guidance
@@ -74,7 +77,7 @@ The original value is never shown. Do not paste real secrets into issues, termin
 
 EnvGuard uses three independent layers:
 
-1. **Known patterns** for possible AWS access keys, GitHub tokens, Google API keys, Stripe keys, Slack tokens, JWTs, private-key headers, and bearer tokens.
+1. **Known patterns** for possible AWS access keys, GitHub, GitLab, npm, Google, Stripe, and Slack tokens, JWTs, private-key headers, bearer tokens, and database connection strings.
 2. **Generic credential assignments** such as `API_KEY=`, `PASSWORD=`, `DATABASE_URL=`, and `CLIENT_SECRET=` across common source and configuration formats.
 3. **Entropy analysis** for unusually random-looking values when context suggests a credential.
 
@@ -86,7 +89,7 @@ It skips placeholders such as `YOUR_API_KEY`, `sk-example`, `example-secret`, an
 envguard install-hook
 ```
 
-The hook scans only staged content before each commit. A clean commit is allowed; a finding blocks the commit with masked evidence. If a custom pre-commit hook already exists, EnvGuard saves it as `pre-commit.envguard-backup`. Review that backup and combine any required project logic before relying on the new hook.
+The hook scans only staged content before each commit. A clean commit is allowed; a finding blocks the commit with masked evidence. If a custom pre-commit hook already exists, EnvGuard saves it as `pre-commit.envguard-backup` and runs it first. `envguard uninstall-hook` restores that previous hook automatically.
 
 ## Scan Git history
 

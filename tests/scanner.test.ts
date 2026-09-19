@@ -12,6 +12,16 @@ describe('detection and redaction', () => {
     expect(findings.some((f) => f.ruleId === 'github-token')).toBe(true);
     expect(JSON.stringify(findings)).not.toContain(raw);
   });
+  it('finds GitLab, npm, and database credential formats', () => {
+    const gitlab = 'glpat-abcdefghijklmnopqrstuvwxyz123456';
+    const npm = 'npm_abcdefghijklmnopqrstuvwxyz0123456789';
+    const database = 'postgres://demo:fake-password@localhost:5432/app';
+    const findings = scanText('config.env', `${gitlab}\n${npm}\n${database}`, cfg);
+    expect(findings.map((finding) => finding.ruleId)).toEqual(
+      expect.arrayContaining(['gitlab-token', 'npm-token', 'database-connection-string']),
+    );
+    expect(JSON.stringify(findings)).not.toContain(database);
+  });
   it('finds generic assignments but ignores placeholders', () => {
     expect(
       scanText('a.env', 'API_KEY=abCDef123456', cfg).some((f) => f.ruleId === 'generic-credential'),
