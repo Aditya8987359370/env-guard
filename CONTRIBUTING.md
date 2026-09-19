@@ -1,17 +1,37 @@
 # Contributing to EnvGuard
 
-Thank you for helping protect developers without sending their code anywhere.
+Thank you for helping make secret protection useful without sending developers' code anywhere.
 
-## Setup
+## Before you start
 
-Install Node.js 20.11+ and Git, then run `npm install`. Use `npm run typecheck`, `npm run lint`, `npm test`, and `npm run build` before opening a pull request.
+Install Node.js 20.11 or newer and Git. Fork the repository on GitHub, clone your fork, then run:
 
-## Adding a detector
+```sh
+npm install
+npm run typecheck
+npm run lint
+npm test
+npm run build
+```
 
-Put focused known-pattern rules in `src/detectors/patterns.ts`, generic assignment logic in `src/detectors/generic.ts`, and statistical logic in `src/detectors/entropy.ts`. Give every rule a stable ID, clear "Possible" wording where validity is uncertain, a justified severity estimate, and tests for positive and negative matches.
+Create a focused branch for your work and open a pull request against `main`. The CI workflow must pass before a change is merged.
 
-Fixtures and tests must use invented, non-working values only. Never commit a credential, customer source code, or unredacted scanner output. Add a masking regression test whenever a new output path is introduced.
+## Adding a detector or rule
 
-## Pull requests
+- Put known token patterns in `src/detectors/patterns.ts`.
+- Put broad assignment detection in `src/detectors/generic.ts`.
+- Put statistical detection in `src/detectors/entropy.ts`.
+- Give each rule a stable ID, clear description, category, and severity estimate.
+- Use "Possible" wording unless a match alone proves the fact being reported.
+- Add positive, negative, false-positive, and masking tests in `tests/`.
 
-Keep changes focused, explain security effects, and include tests. Do not weaken local/offline defaults or add telemetry. For a security-sensitive change, avoid publishing exploit details before maintainers have assessed it; use the private reporting route in SECURITY.md.
+All fixtures must be invented, non-working values. Never commit real credentials, customer source code, or unredacted scanner output. Every new output path must have a test proving raw values do not leak.
+
+## Pull request checklist
+
+- Explain the user-visible behavior and security impact.
+- Keep the change focused and update documentation when behavior changes.
+- Run typecheck, lint, tests, and build locally.
+- Preserve local-first defaults: no telemetry, source upload, or required external API.
+
+For a suspected vulnerability, do not open a public issue. Follow [SECURITY.md](SECURITY.md) instead.

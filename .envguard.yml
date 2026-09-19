@@ -1,10 +1,12 @@
 scan:
   paths:
     - .
+  maxFileSize: 1048576
 ignore:
-  - "**/*.test.ts"
-  - "package-lock.json"
+  - '**/*.test.ts'
+  - 'package-lock.json'
 rules:
+  disabled: []
   entropy:
     enabled: true
     threshold: 4.0

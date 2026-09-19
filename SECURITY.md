@@ -1,7 +1,7 @@
 # Security policy
 
-Please report suspected vulnerabilities privately to the repository maintainers through GitHub's private security advisory feature or the contact address configured by the project owner. Do not post undisclosed vulnerabilities in public issues.
+Please report vulnerabilities privately through [GitHub's private security advisory form](https://github.com/Aditya8987359370/env-guard/security/advisories/new). Do not open a public issue for an undisclosed vulnerability.
 
-Do not include real secrets, customer source code, access tokens, or private keys in any report. Use a minimal synthetic reproduction and explain the affected version, impact, and safe steps to reproduce.
+Do not include real secrets, customer source code, access tokens, private keys, or personal data. Use a minimal synthetic reproduction and include the affected version, expected impact, and safe reproduction steps.
 
-Maintainers should acknowledge reports promptly, investigate privately, coordinate a fix, and publish a disclosure after users have a reasonable update path.
+Maintainers will acknowledge the report, investigate privately, coordinate a fix, and publish a disclosure after users have a reasonable update path.

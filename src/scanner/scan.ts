@@ -6,23 +6,67 @@ import type { EnvGuardConfig, Finding, ScanResult } from '../types.js';
 import { collectFiles, type SourceFile } from './files.js';
 
 export function scanContent(file: SourceFile, config: EnvGuardConfig): Finding[] {
-  const disabled = new Set(config.rules?.disabled ?? []); const found: Finding[] = []; const seen = new Set<string>();
-  const add = (ruleId: string, type: string, severity: Finding['severity'], value: string, line: number) => {
+  const disabled = new Set(config.rules?.disabled ?? []);
+  const found: Finding[] = [];
+  const seen = new Set<string>();
+  const add = (
+    ruleId: string,
+    type: string,
+    severity: Finding['severity'],
+    value: string,
+    line: number,
+  ) => {
     if (disabled.has(ruleId) || isPlaceholder(value)) return;
-    const key = `${ruleId}:${line}:${value}`; if (seen.has(key)) return; seen.add(key);
-    found.push({ ruleId, type, severity, file: file.relativePath, line, maskedValue: maskSecret(value), message: `${type} detected. Detection is an estimate; verify and rotate if needed.` });
+    const key = `${ruleId}:${line}:${value}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    found.push({
+      ruleId,
+      type,
+      severity,
+      file: file.relativePath,
+      line,
+      maskedValue: maskSecret(value),
+      message: `${type} detected. Detection is an estimate; verify and rotate if needed.`,
+    });
   };
   file.content.split(/\r?\n/).forEach((line, index) => {
     const lineNo = index + 1;
-    for (const rule of patternRules) { if (!rule.pattern || disabled.has(rule.id)) continue; rule.pattern.lastIndex = 0; for (const match of line.matchAll(rule.pattern)) add(rule.id, rule.type, rule.severity, match[0], lineNo); }
-    for (const value of genericCandidates(line)) add(genericRule.id, genericRule.type, genericRule.severity, value, lineNo);
-    if (config.rules?.entropy?.enabled !== false) for (const value of entropyCandidates(line, config.rules?.entropy?.threshold ?? 4)) add('high-entropy-value', 'Possible High-Entropy Secret', 'medium', value, lineNo);
+    for (const rule of patternRules) {
+      if (!rule.pattern || disabled.has(rule.id)) continue;
+      rule.pattern.lastIndex = 0;
+      for (const match of line.matchAll(rule.pattern))
+        add(rule.id, rule.type, rule.severity, match[0], lineNo);
+    }
+    for (const value of genericCandidates(line))
+      add(genericRule.id, genericRule.type, genericRule.severity, value, lineNo);
+    if (config.rules?.entropy?.enabled !== false)
+      for (const value of entropyCandidates(line, config.rules?.entropy?.threshold ?? 4))
+        add('high-entropy-value', 'Possible High-Entropy Secret', 'medium', value, lineNo);
   });
   return found;
 }
-export async function scanPaths(root: string, paths: string[], config: EnvGuardConfig): Promise<ScanResult> {
+export async function scanPaths(
+  root: string,
+  paths: string[],
+  config: EnvGuardConfig,
+): Promise<ScanResult> {
   const collection = await collectFiles(root, paths, config);
-  return { version: 1, scannedFiles: collection.files.length, skippedFiles: collection.skipped, findings: collection.files.flatMap((file) => scanContent(file, config)), errors: collection.errors };
+  return {
+    version: 1,
+    scannedFiles: collection.files.length,
+    skippedFiles: collection.skipped,
+    findings: collection.files.flatMap((file) => scanContent(file, config)),
+    errors: collection.errors,
+  };
 }
-export function scanText(path: string, content: string, config: EnvGuardConfig): Finding[] { return scanContent({ path, relativePath: path, content }, config); }
-export function resolvedScanPaths(root: string, requested: string[] | undefined, config: EnvGuardConfig): string[] { return requested?.length ? requested : config.scan?.paths?.length ? config.scan.paths : ['.']; }
+export function scanText(path: string, content: string, config: EnvGuardConfig): Finding[] {
+  return scanContent({ path, relativePath: path, content }, config);
+}
+export function resolvedScanPaths(
+  root: string,
+  requested: string[] | undefined,
+  config: EnvGuardConfig,
+): string[] {
+  return requested?.length ? requested : config.scan?.paths?.length ? config.scan.paths : ['.'];
+}

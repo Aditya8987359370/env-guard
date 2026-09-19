@@ -7,5 +7,9 @@ export function maskSecret(value: string): string {
 }
 
 export function isPlaceholder(value: string): boolean {
-  return /^(?:your[_-]?|change[_-]?|example[_-]?|test[_-]?|dummy|fake|xxx|<[^>]+>)/i.test(value.trim()) || /(?:YOUR_API_KEY|sk-example|example-secret|test-token)/i.test(value);
+  return (
+    /^(?:your[_-]?|change[_-]?|example[_-]?|test[_-]?|dummy|fake|xxx|<[^>]+>)/i.test(
+      value.trim(),
+    ) || /(?:YOUR_API_KEY|sk-example|example-secret|test-token)/i.test(value)
+  );
 }
