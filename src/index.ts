@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import ignore from 'ignore';
-import { loadConfig } from './config/load.js';
+import { customRules, loadConfig } from './config/load.js';
 import { initialize } from './fixer/init.js';
 import { installHook, uninstallHook } from './git/hook.js';
 import { scanHistory } from './git/history.js';
@@ -14,6 +15,7 @@ import { genericRule } from './detectors/generic.js';
 import type { ScanResult } from './types.js';
 
 const root = process.cwd();
+const cliEntrypoint = fileURLToPath(import.meta.url);
 function exitFor(result: ScanResult): void {
   process.exitCode = result.findings.length ? 1 : 0;
 }
@@ -55,7 +57,7 @@ const program = new Command();
 program
   .name('envguard')
   .description('Protect your secrets before they reach Git. All scans run locally.')
-  .version('1.1.0')
+  .version('1.2.0')
   .showSuggestionAfterError();
 program
   .command('scan [paths...]')
@@ -91,7 +93,7 @@ program
   .description('Install the local Git pre-commit hook; preserves a custom hook.')
   .action(async () => {
     try {
-      console.log(`EnvGuard hook installed: ${await installHook(root)}`);
+      console.log(`EnvGuard hook installed: ${await installHook(root, cliEntrypoint)}`);
     } catch (error) {
       fail(error);
     }
@@ -135,24 +137,33 @@ program
   .description('List built-in detection rules.')
   .option('--json', 'print JSON')
   .action((opts) => {
-    const rules = [
-      ...patternRules,
-      genericRule,
-      {
-        id: 'high-entropy-value',
-        description: 'Random-looking credential candidate with context',
-        type: 'Possible High-Entropy Secret',
-        severity: 'medium',
-        category: 'entropy',
-      },
-    ];
-    console.log(
-      opts.json
-        ? JSON.stringify(rules, null, 2)
-        : rules
-            .map((rule) => `${rule.id}\t${rule.severity}\t${rule.category}\t${rule.description}`)
-            .join('\n'),
-    );
+    try {
+      const rules = [
+        ...patternRules,
+        genericRule,
+        {
+          id: 'high-entropy-value',
+          description: 'Random-looking credential candidate with context',
+          type: 'Possible High-Entropy Secret',
+          severity: 'medium' as const,
+          category: 'entropy' as const,
+        },
+        ...customRules(loadConfig(root)),
+      ];
+      console.log(
+        opts.json
+          ? JSON.stringify(
+              rules.map(({ pattern, ...rule }) => ({ ...rule, pattern: pattern?.source })),
+              null,
+              2,
+            )
+          : rules
+              .map((rule) => `${rule.id}\t${rule.severity}\t${rule.category}\t${rule.description}`)
+              .join('\n'),
+      );
+    } catch (error) {
+      fail(error);
+    }
   });
 program
   .command('fix')

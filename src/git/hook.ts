@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { chmod, copyFile, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { git } from './git.js';
-export async function installHook(root: string): Promise<string> {
+export async function installHook(root: string, cliEntrypoint = process.argv[1]): Promise<string> {
   const hooks = (await git(root, ['rev-parse', '--git-path', 'hooks'])).trim();
   const hook = resolve(root, hooks, 'pre-commit');
   if (existsSync(hook)) {
@@ -11,9 +11,15 @@ export async function installHook(root: string): Promise<string> {
       await copyFile(hook, `${hook}.envguard-backup`);
     }
   }
+  if (!cliEntrypoint)
+    throw new Error('Could not locate the EnvGuard CLI entrypoint for the Git hook.');
+  const nodePath = process.execPath.replace(/\\/g, '/');
+  const entrypoint = cliEntrypoint.replace(/\\/g, '/');
   const script =
-    '#!/bin/sh\n# EnvGuard pre-commit scan\nif [ -f "$0.envguard-backup" ]; then\n  "$0.envguard-backup"\n  status=$?\n  [ $status -ne 0 ] && exit $status\nfi\nnode "' +
-    resolve(root, 'dist/index.js').replace(/\\/g, '/') +
+    '#!/bin/sh\n# EnvGuard pre-commit scan\nif [ -f "$0.envguard-backup" ]; then\n  "$0.envguard-backup"\n  status=$?\n  [ $status -ne 0 ] && exit $status\nfi\n"' +
+    nodePath +
+    '" "' +
+    entrypoint +
     '" scan --staged\nstatus=$?\n[ $status -eq 0 ] && echo "EnvGuard scan passed - commit allowed" || echo "EnvGuard blocked the commit"\nexit $status\n';
   await writeFile(hook, script, 'utf8');
   await chmod(hook, 0o755);

@@ -1,4 +1,5 @@
 import { entropyCandidates } from '../detectors/entropy.js';
+import { customRules } from '../config/load.js';
 import { genericCandidates, genericRule } from '../detectors/generic.js';
 import { patternRules } from '../detectors/patterns.js';
 import { maskSecret, isPlaceholder } from '../security/mask.js';
@@ -7,6 +8,7 @@ import { collectFiles, type SourceFile } from './files.js';
 
 export function scanContent(file: SourceFile, config: EnvGuardConfig): Finding[] {
   const disabled = new Set(config.rules?.disabled ?? []);
+  const configuredPatterns = [...patternRules, ...customRules(config)];
   const found: Finding[] = [];
   const seen = new Set<string>();
   const add = (
@@ -32,7 +34,7 @@ export function scanContent(file: SourceFile, config: EnvGuardConfig): Finding[]
   };
   file.content.split(/\r?\n/).forEach((line, index) => {
     const lineNo = index + 1;
-    for (const rule of patternRules) {
+    for (const rule of configuredPatterns) {
       if (!rule.pattern || disabled.has(rule.id)) continue;
       rule.pattern.lastIndex = 0;
       for (const match of line.matchAll(rule.pattern))

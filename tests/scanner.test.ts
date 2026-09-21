@@ -28,6 +28,26 @@ describe('detection and redaction', () => {
     ).toBe(true);
     expect(scanText('a.env', 'API_KEY=YOUR_API_KEY', cfg)).toHaveLength(0);
   });
+  it('applies a validated custom rule from configuration', () => {
+    const value = 'INTERNAL_TOKEN_42';
+    const findings = scanText('config.txt', value, {
+      ...cfg,
+      rules: {
+        ...cfg.rules,
+        custom: [
+          {
+            id: 'internal-token',
+            description: 'internal token',
+            type: 'Possible Internal Token',
+            severity: 'high',
+            pattern: 'INTERNAL_TOKEN_[0-9]+',
+          },
+        ],
+      },
+    });
+    expect(findings.some((finding) => finding.ruleId === 'internal-token')).toBe(true);
+    expect(JSON.stringify(findings)).not.toContain(value);
+  });
   it('calculates entropy and finds contextual random candidates', () => {
     expect(shannonEntropy('aaaaaaaa')).toBeLessThan(1);
     expect(entropyCandidates('TOKEN=q9ZkL2xR8mV4pT7wN1yB6cD3', 3.5)).toHaveLength(1);

@@ -43,11 +43,21 @@ export async function collectFiles(
       const real = await realpath(candidate).catch(() => candidate);
       if (seen.has(real)) return;
       seen.add(real);
-      const entries = await readdir(candidate).catch(() => []);
-      await Promise.all(entries.map((entry) => visit(resolve(candidate, entry))));
+      let entries: string[];
+      try {
+        entries = await readdir(candidate);
+      } catch {
+        result.errors.push(`Could not read directory ${rel || '.'}`);
+        return;
+      }
+      for (const entry of entries) await visit(resolve(candidate, entry));
       return;
     }
-    if (!stat.isFile() || stat.size > (config.scan?.maxFileSize ?? DEFAULT_MAX_BYTES)) {
+    if (
+      !stat.isFile() ||
+      stat.size > (config.scan?.maxFileSize ?? DEFAULT_MAX_BYTES) ||
+      result.files.length >= (config.scan?.maxFiles ?? 10_000)
+    ) {
       result.skipped++;
       return;
     }
@@ -62,6 +72,6 @@ export async function collectFiles(
       result.errors.push(`Could not scan ${rel}`);
     }
   }
-  await Promise.all(paths.map((path) => visit(resolve(root, path))));
+  for (const path of paths) await visit(resolve(root, path));
   return result;
 }

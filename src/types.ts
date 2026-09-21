@@ -13,7 +13,7 @@ export type Rule = {
   description: string;
   type: string;
   severity: Severity;
-  category: 'pattern' | 'generic' | 'entropy';
+  category: 'pattern' | 'generic' | 'entropy' | 'custom';
   pattern?: RegExp;
 };
 export type ScanResult = {
@@ -24,8 +24,18 @@ export type ScanResult = {
   errors: string[];
 };
 export type EnvGuardConfig = {
-  scan?: { paths?: string[]; maxFileSize?: number };
+  scan?: { paths?: string[]; maxFileSize?: number; maxFiles?: number };
   ignore?: string[];
-  rules?: { disabled?: string[]; entropy?: { enabled?: boolean; threshold?: number } };
+  rules?: {
+    disabled?: string[];
+    entropy?: { enabled?: boolean; threshold?: number };
+    custom?: Array<{
+      id: string;
+      description: string;
+      pattern: string;
+      type?: string;
+      severity?: Severity;
+    }>;
+  };
   output?: { maskSecrets?: boolean };
 };

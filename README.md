@@ -17,6 +17,7 @@ EnvGuard is a free, open-source command-line tool that helps developers find pos
 - Check Git history for credentials that may already have been committed.
 - Use JSON in scripts and SARIF in GitHub Code Scanning.
 - Tune ignores, disabled rules, file-size limits, and entropy sensitivity.
+- Add private organization-specific detectors through local YAML custom rules.
 - Inspect skipped files and non-fatal read warnings with `--verbose`.
 - Work without accounts, telemetry, external APIs, databases, or AI keys.
 
@@ -83,6 +84,8 @@ EnvGuard uses three independent layers:
 
 It skips placeholders such as `YOUR_API_KEY`, `sk-example`, `example-secret`, and `test-token`. It also respects `.gitignore` and `.envguard.yml`, skips binary files and symlinks, limits file size to 1 MiB by default, and ignores dependency/build folders.
 
+To keep normal scans responsive on very large repositories, EnvGuard scans up to 10,000 files by default. Use `scan.maxFiles` only when a larger limit is appropriate for your machine and repository.
+
 ## Protect Git commits
 
 ```sh
@@ -110,11 +113,18 @@ scan:
   paths:
     - .
   maxFileSize: 1048576
+  maxFiles: 10000
 ignore:
   - '**/*.test.ts'
   - 'package-lock.json'
 rules:
   disabled: []
+  custom:
+    - id: internal-token
+      description: Internal service token
+      type: Possible Internal Token
+      severity: high
+      pattern: 'INTERNAL_TOKEN_[0-9]+'
   entropy:
     enabled: true
     threshold: 4.0
@@ -123,6 +133,8 @@ output:
 ```
 
 Add a rule ID from `envguard rules` to `rules.disabled` to turn that rule off. A lower entropy threshold reports more candidates and may increase false positives. Use `ignore` for generated files, test fixtures, and documentation examples that should not be scanned.
+
+Custom rules run locally and appear in `envguard rules`. Every custom rule needs a lowercase hyphenated ID, description, regex pattern of at most 512 characters, and an optional severity. Invalid configuration stops the scan with a clear error instead of silently skipping rules.
 
 ## JSON and SARIF
 

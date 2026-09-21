@@ -19,9 +19,12 @@ describe('Git hook lifecycle', () => {
     const hook = join(tempRoot, '.git', 'hooks', 'pre-commit');
     const original = '#!/bin/sh\necho original hook\n';
     await writeFile(hook, original);
-    await installHook(tempRoot);
+    const entrypoint = 'C:/tools/envguard/dist/index.js';
+    await installHook(tempRoot, entrypoint);
     expect(await readFile(`${hook}.envguard-backup`, 'utf8')).toBe(original);
-    expect(await readFile(hook, 'utf8')).toContain('EnvGuard pre-commit scan');
+    const installed = await readFile(hook, 'utf8');
+    expect(installed).toContain('EnvGuard pre-commit scan');
+    expect(installed).toContain(entrypoint);
     expect(await uninstallHook(tempRoot)).toContain('restored');
     expect(await readFile(hook, 'utf8')).toBe(original);
   });
