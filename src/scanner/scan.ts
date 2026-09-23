@@ -1,5 +1,5 @@
 import { entropyCandidates } from '../detectors/entropy.js';
-import { customRules } from '../config/load.js';
+import { allowlistPatterns, customRules } from '../config/load.js';
 import { genericCandidates, genericRule } from '../detectors/generic.js';
 import { patternRules } from '../detectors/patterns.js';
 import { maskSecret, isPlaceholder } from '../security/mask.js';
@@ -9,6 +9,7 @@ import { collectFiles, type SourceFile } from './files.js';
 export function scanContent(file: SourceFile, config: EnvGuardConfig): Finding[] {
   const disabled = new Set(config.rules?.disabled ?? []);
   const configuredPatterns = [...patternRules, ...customRules(config)];
+  const allowlist = allowlistPatterns(config);
   const found: Finding[] = [];
   const seen = new Set<string>();
   const add = (
@@ -18,7 +19,12 @@ export function scanContent(file: SourceFile, config: EnvGuardConfig): Finding[]
     value: string,
     line: number,
   ) => {
-    if (disabled.has(ruleId) || isPlaceholder(value)) return;
+    if (
+      disabled.has(ruleId) ||
+      isPlaceholder(value) ||
+      allowlist.some((pattern) => pattern.test(value))
+    )
+      return;
     const key = `${ruleId}:${line}:${value}`;
     if (seen.has(key)) return;
     seen.add(key);
@@ -47,6 +53,23 @@ export function scanContent(file: SourceFile, config: EnvGuardConfig): Finding[]
         add('high-entropy-value', 'Possible High-Entropy Secret', 'medium', value, lineNo);
   });
   return found;
+}
+
+const severityRank: Record<Finding['severity'], number> = {
+  info: 0,
+  low: 1,
+  medium: 2,
+  high: 3,
+  critical: 4,
+};
+
+export function filterBySeverity(result: ScanResult, minimum: Finding['severity']): ScanResult {
+  return {
+    ...result,
+    findings: result.findings.filter(
+      (finding) => severityRank[finding.severity] >= severityRank[minimum],
+    ),
+  };
 }
 export async function scanPaths(
   root: string,

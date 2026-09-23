@@ -18,6 +18,7 @@ EnvGuard is a free, open-source command-line tool that helps developers find pos
 - Use JSON in scripts and SARIF in GitHub Code Scanning.
 - Tune ignores, disabled rules, file-size limits, and entropy sensitivity.
 - Add private organization-specific detectors through local YAML custom rules.
+- Report only the severities your team wants in local scans or CI.
 - Inspect skipped files and non-fatal read warnings with `--verbose`.
 - Work without accounts, telemetry, external APIs, databases, or AI keys.
 
@@ -52,6 +53,7 @@ envguard scan .               # Scans the current project
 envguard scan --json          # Prints redacted, machine-readable JSON
 envguard scan --sarif         # Prints redacted SARIF 2.1.0
 envguard scan --verbose       # Shows skipped-file and read-warning details
+envguard scan --min-severity high  # Reports only high and critical findings
 envguard install-hook         # Installs local pre-commit protection
 envguard uninstall-hook       # Restores the previous hook, when one was saved
 envguard history --all        # Scans reachable Git history
@@ -119,6 +121,8 @@ ignore:
   - 'package-lock.json'
 rules:
   disabled: []
+  allowlist:
+    - '^SAFE_DEMO_TOKEN_[0-9]+$'
   custom:
     - id: internal-token
       description: Internal service token
@@ -130,11 +134,14 @@ rules:
     threshold: 4.0
 output:
   maskSecrets: true
+  minSeverity: info
 ```
 
 Add a rule ID from `envguard rules` to `rules.disabled` to turn that rule off. A lower entropy threshold reports more candidates and may increase false positives. Use `ignore` for generated files, test fixtures, and documentation examples that should not be scanned.
 
 Custom rules run locally and appear in `envguard rules`. Every custom rule needs a lowercase hyphenated ID, description, regex pattern of at most 512 characters, and an optional severity. Invalid configuration stops the scan with a clear error instead of silently skipping rules.
+
+Use `rules.allowlist` only for known-safe examples or values that your team has reviewed. It accepts regular expressions and suppresses matching candidates before they are reported. For CI, add `--min-severity high` to fail only for high or critical findings. You can set the same default with `output.minSeverity`.
 
 ## JSON and SARIF
 

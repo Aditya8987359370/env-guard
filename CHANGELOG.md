@@ -2,6 +2,13 @@
 
 All notable changes to EnvGuard are documented here.
 
+## v1.3.0
+
+- Added `--min-severity` for scan and history commands.
+- Added `output.minSeverity` configuration for project-wide severity filtering.
+- Added `rules.allowlist` for reviewed, known-safe candidate patterns.
+- Added validation and tests for allowlist patterns and severity values.
+
 ## v1.2.0
 
 - Fixed Git hooks to use the installed EnvGuard CLI path, including global npm installations.

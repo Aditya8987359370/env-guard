@@ -3,7 +3,7 @@ import { defaults } from '../src/config/load.js';
 import { entropyCandidates, shannonEntropy } from '../src/detectors/entropy.js';
 import { maskSecret } from '../src/security/mask.js';
 import { sarifReport } from '../src/reporter/report.js';
-import { scanText } from '../src/scanner/scan.js';
+import { filterBySeverity, scanText } from '../src/scanner/scan.js';
 const cfg = { ...defaults, rules: { ...defaults.rules, entropy: { enabled: true, threshold: 4 } } };
 describe('detection and redaction', () => {
   it('finds known patterns and never returns their raw values', () => {
@@ -47,6 +47,25 @@ describe('detection and redaction', () => {
     });
     expect(findings.some((finding) => finding.ruleId === 'internal-token')).toBe(true);
     expect(JSON.stringify(findings)).not.toContain(value);
+  });
+  it('suppresses a known-safe candidate with an allowlist pattern', () => {
+    const raw = 'AKIA1234567890ABCDEF';
+    const findings = scanText('example.txt', raw, {
+      ...cfg,
+      rules: { ...cfg.rules, allowlist: ['^AKIA1234567890ABCDEF$'] },
+    });
+    expect(findings.some((finding) => finding.ruleId === 'aws-access-key')).toBe(false);
+  });
+  it('filters findings below a selected severity threshold', () => {
+    const result = {
+      version: 1 as const,
+      scannedFiles: 1,
+      skippedFiles: 0,
+      errors: [],
+      findings: scanText('a.env', 'API_KEY=abCDef123456', cfg),
+    };
+    expect(filterBySeverity(result, 'critical').findings).toHaveLength(0);
+    expect(filterBySeverity(result, 'high').findings.length).toBeGreaterThan(0);
   });
   it('calculates entropy and finds contextual random candidates', () => {
     expect(shannonEntropy('aaaaaaaa')).toBeLessThan(1);

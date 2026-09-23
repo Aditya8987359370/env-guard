@@ -26,7 +26,7 @@ export async function initialize(root: string): Promise<string[]> {
   if (!existsSync(config)) {
     await writeFile(
       config,
-      'scan:\n  paths:\n    - .\n  maxFileSize: 1048576\n  maxFiles: 10000\nignore:\n  - "**/*.test.ts"\n  - "package-lock.json"\nrules:\n  disabled: []\n  custom: []\n  entropy:\n    enabled: true\n    threshold: 4.0\noutput:\n  maskSecrets: true\n',
+      'scan:\n  paths:\n    - .\n  maxFileSize: 1048576\n  maxFiles: 10000\nignore:\n  - "**/*.test.ts"\n  - "package-lock.json"\nrules:\n  disabled: []\n  allowlist: []\n  custom: []\n  entropy:\n    enabled: true\n    threshold: 4.0\noutput:\n  maskSecrets: true\n  minSeverity: info\n',
     );
     changed.push('created .envguard.yml');
   }

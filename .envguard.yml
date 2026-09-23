@@ -8,9 +8,11 @@ ignore:
   - 'package-lock.json'
 rules:
   disabled: []
+  allowlist: []
   custom: []
   entropy:
     enabled: true
     threshold: 4.0
 output:
   maskSecrets: true
+  minSeverity: info

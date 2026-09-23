@@ -17,8 +17,8 @@ export const defaults: Required<Pick<EnvGuardConfig, 'scan' | 'ignore' | 'rules'
     'yarn.lock',
     'pnpm-lock.yaml',
   ],
-  rules: { disabled: [], entropy: { enabled: true, threshold: 4.0 }, custom: [] },
-  output: { maskSecrets: true },
+  rules: { disabled: [], allowlist: [], entropy: { enabled: true, threshold: 4.0 }, custom: [] },
+  output: { maskSecrets: true, minSeverity: 'info' },
 };
 export function loadConfig(root: string): EnvGuardConfig {
   const file = resolve(root, '.envguard.yml');
@@ -36,9 +36,29 @@ export function loadConfig(root: string): EnvGuardConfig {
       ...(parsed.rules ?? {}),
       entropy: { ...defaults.rules.entropy, ...(parsed.rules?.entropy ?? {}) },
       custom: parsed.rules?.custom ?? defaults.rules.custom,
+      allowlist: parsed.rules?.allowlist ?? defaults.rules.allowlist,
     },
     output: { ...defaults.output, ...(parsed.output ?? {}) },
   };
+}
+
+export function allowlistPatterns(config: EnvGuardConfig): RegExp[] {
+  return (config.rules?.allowlist ?? []).map((pattern, index) => {
+    if (!pattern || pattern.length > 512)
+      throw new Error(
+        `Invalid allowlist pattern at index ${index}. Patterns must be 1 to 512 characters.`,
+      );
+    try {
+      return new RegExp(pattern);
+    } catch {
+      throw new Error(`Invalid allowlist regular expression at index ${index}.`);
+    }
+  });
+}
+
+export function validateSeverity(value: string): Severity {
+  if (['critical', 'high', 'medium', 'low', 'info'].includes(value)) return value as Severity;
+  throw new Error(`Invalid severity "${value}". Use critical, high, medium, low, or info.`);
 }
 
 export function customRules(config: EnvGuardConfig): Rule[] {

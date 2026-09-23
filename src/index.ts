@@ -3,13 +3,13 @@ import { Command } from 'commander';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import ignore from 'ignore';
-import { customRules, loadConfig } from './config/load.js';
+import { customRules, loadConfig, validateSeverity } from './config/load.js';
 import { initialize } from './fixer/init.js';
 import { installHook, uninstallHook } from './git/hook.js';
 import { scanHistory } from './git/history.js';
 import { stagedContent, stagedFiles } from './git/git.js';
 import { terminalReport, sarifReport } from './reporter/report.js';
-import { resolvedScanPaths, scanPaths, scanText } from './scanner/scan.js';
+import { filterBySeverity, resolvedScanPaths, scanPaths, scanText } from './scanner/scan.js';
 import { patternRules } from './detectors/patterns.js';
 import { genericRule } from './detectors/generic.js';
 import type { ScanResult } from './types.js';
@@ -25,7 +25,13 @@ function fail(error: unknown): void {
 }
 async function scanAction(
   paths: string[],
-  opts: { json?: boolean; sarif?: boolean; staged?: boolean; verbose?: boolean },
+  opts: {
+    json?: boolean;
+    sarif?: boolean;
+    staged?: boolean;
+    verbose?: boolean;
+    minSeverity?: string;
+  },
 ): Promise<void> {
   const config = loadConfig(root);
   let result: ScanResult;
@@ -44,14 +50,18 @@ async function scanAction(
     ).flat();
     result = { version: 1, scannedFiles: files.length, skippedFiles: 0, findings, errors: [] };
   } else result = await scanPaths(root, resolvedScanPaths(root, paths, config), config);
+  const filtered = filterBySeverity(
+    result,
+    validateSeverity(opts.minSeverity ?? config.output?.minSeverity ?? 'info'),
+  );
   console.log(
     opts.sarif
-      ? JSON.stringify(sarifReport(result), null, 2)
+      ? JSON.stringify(sarifReport(filtered), null, 2)
       : opts.json
-        ? JSON.stringify(result, null, 2)
-        : terminalReport(result, opts.verbose),
+        ? JSON.stringify(filtered, null, 2)
+        : terminalReport(filtered, opts.verbose),
   );
-  exitFor(result);
+  exitFor(filtered);
 }
 const program = new Command();
 program
@@ -66,6 +76,10 @@ program
   .option('--sarif', 'print SARIF 2.1.0 without raw secrets')
   .option('--staged', 'scan staged Git content only (for hooks)')
   .option('--verbose', 'include skipped-file and non-fatal read warnings')
+  .option(
+    '--min-severity <severity>',
+    'only report findings at or above: info, low, medium, high, critical',
+  )
   .action(async (paths, opts) => {
     try {
       await scanAction(paths, opts);
@@ -115,6 +129,10 @@ program
   .option('--since <commit>', 'scan commits after this commit')
   .option('--path <file>', 'limit scanning to a path')
   .option('--json', 'print JSON')
+  .option(
+    '--min-severity <severity>',
+    'only report findings at or above: info, low, medium, high, critical',
+  )
   .action(async (opts) => {
     try {
       const config = loadConfig(root);
@@ -126,8 +144,12 @@ program
         findings,
         errors: [],
       };
-      console.log(opts.json ? JSON.stringify(result, null, 2) : terminalReport(result));
-      exitFor(result);
+      const filtered = filterBySeverity(
+        result,
+        validateSeverity(opts.minSeverity ?? config.output?.minSeverity ?? 'info'),
+      );
+      console.log(opts.json ? JSON.stringify(filtered, null, 2) : terminalReport(filtered));
+      exitFor(filtered);
     } catch (error) {
       fail(error);
     }

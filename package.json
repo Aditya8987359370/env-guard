@@ -1,6 +1,6 @@
 {
   "name": "envguard",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Privacy-first local secret detection and Git protection toolkit.",
   "license": "MIT",
   "type": "module",

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { customRules, defaults } from '../src/config/load.js';
+import { allowlistPatterns, customRules, defaults, validateSeverity } from '../src/config/load.js';
 
 describe('custom rule configuration', () => {
   it('rejects unsafe custom rule metadata', () => {
@@ -23,5 +23,11 @@ describe('custom rule configuration', () => {
         },
       }),
     ).toThrow('Invalid regular expression');
+  });
+  it('rejects invalid allowlist patterns and severity values', () => {
+    expect(() =>
+      allowlistPatterns({ ...defaults, rules: { ...defaults.rules, allowlist: ['['] } }),
+    ).toThrow('Invalid allowlist');
+    expect(() => validateSeverity('urgent')).toThrow('Invalid severity');
   });
 });

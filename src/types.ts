@@ -28,6 +28,7 @@ export type EnvGuardConfig = {
   ignore?: string[];
   rules?: {
     disabled?: string[];
+    allowlist?: string[];
     entropy?: { enabled?: boolean; threshold?: number };
     custom?: Array<{
       id: string;
@@ -37,5 +38,5 @@ export type EnvGuardConfig = {
       severity?: Severity;
     }>;
   };
-  output?: { maskSecrets?: boolean };
+  output?: { maskSecrets?: boolean; minSeverity?: Severity };
 };
