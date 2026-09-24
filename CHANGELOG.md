@@ -2,6 +2,15 @@
 
 All notable changes to EnvGuard are documented here.
 
+## v1.4.0
+
+- Added modern AI token detection: OpenAI API keys (`sk-proj-...`, `sk-...`), Anthropic API keys (`sk-ant-...`), and Hugging Face tokens (`hf_...`).
+- Added developer communication & email API detectors: SendGrid (`SG....`), Resend (`re_...`), and Twilio Account SID (`AC...`).
+- Enhanced generic credential detection to match session secrets, JWT secrets, webhook secrets, encryption keys, and AWS secret access keys.
+- Expanded placeholder suppression heuristics to minimize false alarms on placeholder strings (e.g. `insert_here`, `replace_me`, `enter_your_key`, `sample`).
+- Fixed and synchronized CLI version string to match `package.json`.
+- Added unit test coverage for new detectors and generic assignment patterns.
+
 ## v1.3.0
 
 - Added `--min-severity` for scan and history commands.

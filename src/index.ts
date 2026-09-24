@@ -67,7 +67,7 @@ const program = new Command();
 program
   .name('envguard')
   .description('Protect your secrets before they reach Git. All scans run locally.')
-  .version('1.2.0')
+  .version('1.4.0')
   .showSuggestionAfterError();
 program
   .command('scan [paths...]')

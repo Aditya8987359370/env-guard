@@ -80,11 +80,11 @@ The original value is never shown. Do not paste real secrets into issues, termin
 
 EnvGuard uses three independent layers:
 
-1. **Known patterns** for possible AWS access keys, GitHub, GitLab, npm, Google, Stripe, and Slack tokens, JWTs, private-key headers, bearer tokens, and database connection strings.
-2. **Generic credential assignments** such as `API_KEY=`, `PASSWORD=`, `DATABASE_URL=`, and `CLIENT_SECRET=` across common source and configuration formats.
+1. **Known patterns** for possible AWS access keys, OpenAI (`sk-proj-...`, `sk-...`), Anthropic (`sk-ant-...`), Hugging Face (`hf_...`), GitHub, GitLab, npm, Google, Stripe, Slack, SendGrid, Resend, and Twilio credentials, JWTs, private-key headers, bearer tokens, and database connection strings.
+2. **Generic credential assignments** such as `API_KEY=`, `PASSWORD=`, `DATABASE_URL=`, `CLIENT_SECRET=`, `SESSION_SECRET=`, `WEBHOOK_SECRET=`, and `ENCRYPTION_KEY=` across common source and configuration formats.
 3. **Entropy analysis** for unusually random-looking values when context suggests a credential.
 
-It skips placeholders such as `YOUR_API_KEY`, `sk-example`, `example-secret`, and `test-token`. It also respects `.gitignore` and `.envguard.yml`, skips binary files and symlinks, limits file size to 1 MiB by default, and ignores dependency/build folders.
+It skips placeholders such as `YOUR_API_KEY`, `sk-example`, `example-secret`, `insert_here`, `replace_me`, and `test-token`. It also respects `.gitignore` and `.envguard.yml`, skips binary files and symlinks, limits file size to 1 MiB by default, and ignores dependency/build folders.
 
 To keep normal scans responsive on very large repositories, EnvGuard scans up to 10,000 files by default. Use `scan.maxFiles` only when a larger limit is appropriate for your machine and repository.
 

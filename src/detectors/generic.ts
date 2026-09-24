@@ -7,7 +7,7 @@ export const genericRule: Rule = {
   category: 'generic',
 };
 const key =
-  '(?:api[_-]?(?:key|token)|access[_-]?token|auth(?:entication)?[_-]?token|secret|password|private[_-]?key|database[_-]?(?:url|password)|connection[_-]?string|client[_-]?secret)';
+  '(?:api[_-]?(?:key|token)|access[_-]?token|auth(?:entication)?[_-]?token|secret|password|private[_-]?key|database[_-]?(?:url|password)|connection[_-]?string|client[_-]?secret|session[_-]?secret|jwt[_-]?secret|webhook[_-]?secret|encryption[_-]?key|aws[_-]?secret(?:[_-]?access)?[_-]?key)';
 const assignment = new RegExp(
   `(?:["']?${key}["']?\\s*(?:=|:|=>)\\s*["']?)([^\\s"',;}` + '`' + `]{6,})`,
   'ig',

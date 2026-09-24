@@ -96,4 +96,45 @@ describe('detection and redaction', () => {
     });
     expect(findings.some((f) => f.ruleId === 'aws-access-key')).toBe(false);
   });
+  it('detects modern AI keys (OpenAI, Anthropic, Hugging Face)', () => {
+    const openai = ['sk-proj-', 'abc123DEF456ghi789JKL012mno345PQR678stu901VWX'].join('');
+    const anthropic = ['sk-ant-api03-', 'abcdefghijklmnopqrstuvwxyz0123456789ABCDEF012345'].join(
+      '',
+    );
+    const hf = ['hf_', 'abcdefghijklmnopqrstuvwxyz01234567'].join('');
+    const text = `OPENAI=${openai}\nANTHROPIC=${anthropic}\nHF=${hf}`;
+    const findings = scanText('ai.env', text, cfg);
+    expect(findings.map((f) => f.ruleId)).toEqual(
+      expect.arrayContaining(['openai-api-key', 'anthropic-api-key', 'huggingface-token']),
+    );
+    expect(JSON.stringify(findings)).not.toContain(openai);
+    expect(JSON.stringify(findings)).not.toContain(anthropic);
+    expect(JSON.stringify(findings)).not.toContain(hf);
+  });
+  it('detects developer messaging and email keys (SendGrid, Resend, Twilio)', () => {
+    const sendgrid = [
+      'SG.',
+      '1234567890123456789012.',
+      '1234567890123456789012345678901234567890123',
+    ].join('');
+    const resend = ['re_', '1234567890abcdefghijklmnopqrstuvwxyz'].join('');
+    const twilio = ['AC', '0123456789abcdef0123456789abcdef'].join('');
+    const text = `SENDGRID=${sendgrid}\nRESEND=${resend}\nTWILIO=${twilio}`;
+    const findings = scanText('comm.env', text, cfg);
+    expect(findings.map((f) => f.ruleId)).toEqual(
+      expect.arrayContaining(['sendgrid-api-key', 'resend-api-key', 'twilio-account-sid']),
+    );
+  });
+  it('detects extended generic credentials like webhook_secret and session_secret', () => {
+    const text =
+      'WEBHOOK_SECRET=production_webhook_secret_999\nSESSION_SECRET=secure_session_key_12345';
+    const findings = scanText('.env', text, cfg);
+    expect(findings.filter((f) => f.ruleId === 'generic-credential')).toHaveLength(2);
+  });
+  it('ignores extended placeholder candidates', () => {
+    const text =
+      'API_KEY=insert_here_api_key\nSECRET=replace_me_with_secret\nKEY=sample-placeholder';
+    const findings = scanText('.env', text, cfg);
+    expect(findings).toHaveLength(0);
+  });
 });

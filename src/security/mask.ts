@@ -7,9 +7,13 @@ export function maskSecret(value: string): string {
 }
 
 export function isPlaceholder(value: string): boolean {
+  const trimmed = value.trim();
   return (
-    /^(?:your[_-]?|change[_-]?|example[_-]?|test[_-]?|dummy|fake|xxx|<[^>]+>)/i.test(
-      value.trim(),
-    ) || /(?:YOUR_API_KEY|sk-example|example-secret|test-token)/i.test(value)
+    /^(?:your[_-]?|change[_-]?|example[_-]?|test[_-]?|dummy|fake|xxx|sample[_-]?|placeholder|insert[_-]?here|replace[_-]?me|enter[_-]?|<[^>]+>)/i.test(
+      trimmed,
+    ) ||
+    /(?:YOUR_API_KEY|sk-example|example-secret|test-token|placeholder|insert_here|replace_me|my-secret-key)/i.test(
+      trimmed,
+    )
   );
 }
