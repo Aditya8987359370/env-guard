@@ -7,6 +7,7 @@ export type Finding = {
   line: number;
   maskedValue: string;
   message: string;
+  revokeUrl?: string;
 };
 export type Rule = {
   id: string;
@@ -15,6 +16,7 @@ export type Rule = {
   severity: Severity;
   category: 'pattern' | 'generic' | 'entropy' | 'custom';
   pattern?: RegExp;
+  revokeUrl?: string;
 };
 export type ScanResult = {
   version: 1;

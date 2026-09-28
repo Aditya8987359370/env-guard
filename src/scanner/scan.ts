@@ -18,6 +18,7 @@ export function scanContent(file: SourceFile, config: EnvGuardConfig): Finding[]
     severity: Finding['severity'],
     value: string,
     line: number,
+    revokeUrl?: string,
   ) => {
     if (
       disabled.has(ruleId) ||
@@ -36,15 +37,19 @@ export function scanContent(file: SourceFile, config: EnvGuardConfig): Finding[]
       line,
       maskedValue: maskSecret(value),
       message: `${type} detected. Detection is an estimate; verify and rotate if needed.`,
+      ...(revokeUrl ? { revokeUrl } : {}),
     });
   };
-  file.content.split(/\r?\n/).forEach((line, index) => {
+  const lines = file.content.split(/\r?\n/);
+  lines.forEach((line, index) => {
     const lineNo = index + 1;
+    if (/(?:envguard-ignore(?:-line)?|envguard-disable-line)/i.test(line)) return;
+    if (index > 0 && /(?:envguard-ignore-next-line)/i.test(lines[index - 1])) return;
     for (const rule of configuredPatterns) {
       if (!rule.pattern || disabled.has(rule.id)) continue;
       rule.pattern.lastIndex = 0;
       for (const match of line.matchAll(rule.pattern))
-        add(rule.id, rule.type, rule.severity, match[0], lineNo);
+        add(rule.id, rule.type, rule.severity, match[0], lineNo, rule.revokeUrl);
     }
     for (const value of genericCandidates(line))
       add(genericRule.id, genericRule.type, genericRule.severity, value, lineNo);

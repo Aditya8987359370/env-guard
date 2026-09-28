@@ -17,4 +17,27 @@ describe('reporting', () => {
     expect(terminalReport(result, true)).toContain('Skipped: 1');
     expect(terminalReport(result, true)).toContain('locked.txt');
   });
+  it('displays severity breakdown and revokeUrl in terminalReport', () => {
+    const result = {
+      version: 1 as const,
+      scannedFiles: 1,
+      skippedFiles: 0,
+      errors: [],
+      findings: [
+        {
+          ruleId: 'openai-api-key',
+          type: 'Possible OpenAI API Key',
+          severity: 'critical' as const,
+          file: 'src/key.ts',
+          line: 10,
+          maskedValue: 'sk-p************WX',
+          message: 'Found key',
+          revokeUrl: 'https://platform.openai.com/api-keys',
+        },
+      ],
+    };
+    const report = terminalReport(result);
+    expect(report).toContain('Critical: 1');
+    expect(report).toContain('Revoke: https://platform.openai.com/api-keys');
+  });
 });

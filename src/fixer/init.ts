@@ -32,3 +32,33 @@ export async function initialize(root: string): Promise<string[]> {
   }
   return changed;
 }
+
+export async function generateExampleEnv(root: string, keys: string[]): Promise<string[]> {
+  const example = resolve(root, '.env.example');
+  const uniqueKeys = [
+    ...new Set(
+      keys.map((k) => k.trim()).filter((k) => k.length > 0 && /^[A-Za-z_][A-Za-z0-9_]*$/.test(k)),
+    ),
+  ];
+  if (uniqueKeys.length === 0) return [];
+  const added: string[] = [];
+  let existingContent = '';
+  if (existsSync(example)) {
+    const fsPromises = await import('node:fs/promises');
+    existingContent = await fsPromises.readFile(example, 'utf8');
+  } else {
+    existingContent = '# Copy to .env and set local values. Never commit .env.\n';
+    await writeFile(example, existingContent, 'utf8');
+  }
+  const toAppend: string[] = [];
+  for (const k of uniqueKeys) {
+    if (!new RegExp(`^${k}\\s*=`, 'm').test(existingContent)) {
+      toAppend.push(`${k}=YOUR_${k}\n`);
+      added.push(k);
+    }
+  }
+  if (toAppend.length > 0) {
+    await appendFile(example, (existingContent.endsWith('\n') ? '' : '\n') + toAppend.join(''));
+  }
+  return added;
+}

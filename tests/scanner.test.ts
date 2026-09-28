@@ -137,4 +137,51 @@ describe('detection and redaction', () => {
     const findings = scanText('.env', text, cfg);
     expect(findings).toHaveLength(0);
   });
+  it('detects GitHub fine-grained PAT and modern API keys (Groq, Perplexity, Postman, Sentry)', () => {
+    const pat = [
+      'github_pat_',
+      '11ABCDEF_0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz',
+    ].join('');
+    const groq = ['gsk_', '0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdef'].join('');
+    const pplx = ['pplx-', '0123456789abcdefghijklmnopqrstuvwxyz0123456789ab'].join('');
+    const postman = [
+      'PMAK-',
+      '0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdef0123456789',
+    ].join('');
+    const sentry = [
+      'sntrys_',
+      '0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdef0123456789abcdef',
+    ].join('');
+    const text = `PAT=${pat}\nGROQ=${groq}\nPPLX=${pplx}\nPOSTMAN=${postman}\nSENTRY=${sentry}`;
+    const findings = scanText('api.env', text, cfg);
+    expect(findings.map((f) => f.ruleId)).toEqual(
+      expect.arrayContaining([
+        'github-fine-grained-pat',
+        'groq-api-key',
+        'perplexity-api-key',
+        'postman-api-key',
+        'sentry-auth-token',
+      ]),
+    );
+  });
+  it('suppresses findings with inline envguard-ignore and envguard-ignore-next-line', () => {
+    const key = ['ghp_', 'abcdefghijklmnopqrstuvwxyz1234567890'].join('');
+    const text = [
+      `const key1 = '${key}'; // envguard-ignore`,
+      `// envguard-ignore-next-line`,
+      `const key2 = '${key}';`,
+      `const key3 = '${key}';`,
+    ].join('\n');
+    const findings = scanText('ignored.ts', text, cfg);
+    expect(findings.some((f) => f.line === 1)).toBe(false);
+    expect(findings.some((f) => f.line === 2)).toBe(false);
+    expect(findings.some((f) => f.line === 3)).toBe(false);
+    expect(findings.some((f) => f.line === 4)).toBe(true);
+  });
+  it('attaches provider revokeUrl to applicable findings', () => {
+    const openai = ['sk-proj-', 'abc123DEF456ghi789JKL012mno345PQR678stu901VWX'].join('');
+    const findings = scanText('test.env', `KEY=${openai}`, cfg);
+    const finding = findings.find((f) => f.ruleId === 'openai-api-key');
+    expect(finding?.revokeUrl).toBe('https://platform.openai.com/api-keys');
+  });
 });

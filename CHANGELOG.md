@@ -2,6 +2,15 @@
 
 All notable changes to EnvGuard are documented here.
 
+## v1.5.0
+
+- Added inline and line-preceding comment directives: `// envguard-ignore` and `// envguard-ignore-next-line` to safely suppress false positives directly in source code.
+- Added modern cloud, LLM, and developer API detectors: GitHub Fine-Grained Personal Access Tokens (`github_pat_...`), Groq (`gsk_...`), Perplexity (`pplx-...`), Postman (`PMAK-...`), and Sentry (`sntrys_...`).
+- Added provider revocation URLs directly in scan findings and terminal reports for 1-click credential rotation.
+- Added detailed severity breakdown summary in terminal scans (`Critical: X, High: Y, Medium: Z`).
+- Upgraded `envguard fix` with automated finding analysis, provider revocation links, and `--generate-example` to automatically populate `.env.example` with safe placeholders.
+- Added SARIF 2.1.0 `helpUri` metadata pointing directly to provider credential management settings.
+
 ## v1.4.0
 
 - Added modern AI token detection: OpenAI API keys (`sk-proj-...`, `sk-...`), Anthropic API keys (`sk-ant-...`), and Hugging Face tokens (`hf_...`).

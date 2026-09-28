@@ -8,14 +8,25 @@ export const patternRules: Rule[] = [
     severity: 'high',
     category: 'pattern',
     pattern: /\b(?:AKIA|ASIA|ABIA|ACCA)[A-Z0-9]{16}\b/g,
+    revokeUrl: 'https://console.aws.amazon.com/iam/',
   },
   {
     id: 'github-token',
-    description: 'Potential GitHub personal or fine-grained token',
+    description: 'Potential GitHub personal or classic token',
     type: 'Possible GitHub Token',
     severity: 'critical',
     category: 'pattern',
     pattern: /\bgh[pousr]_[A-Za-z0-9_]{20,255}\b/g,
+    revokeUrl: 'https://github.com/settings/tokens',
+  },
+  {
+    id: 'github-fine-grained-pat',
+    description: 'Potential GitHub fine-grained personal access token',
+    type: 'Possible GitHub Fine-Grained PAT',
+    severity: 'critical',
+    category: 'pattern',
+    pattern: /\bgithub_pat_[A-Za-z0-9_]{20,100}\b/g,
+    revokeUrl: 'https://github.com/settings/tokens?type=beta',
   },
   {
     id: 'gitlab-token',
@@ -24,6 +35,7 @@ export const patternRules: Rule[] = [
     severity: 'critical',
     category: 'pattern',
     pattern: /\bgl(?:pat|proj|rt)-[A-Za-z0-9_-]{20,}\b/g,
+    revokeUrl: 'https://gitlab.com/-/user_settings/personal_access_tokens',
   },
   {
     id: 'npm-token',
@@ -32,6 +44,7 @@ export const patternRules: Rule[] = [
     severity: 'critical',
     category: 'pattern',
     pattern: /\bnpm_[A-Za-z0-9]{36}\b/g,
+    revokeUrl: 'https://www.npmjs.com/settings/tokens',
   },
   {
     id: 'google-api-key',
@@ -40,6 +53,7 @@ export const patternRules: Rule[] = [
     severity: 'high',
     category: 'pattern',
     pattern: /\bAIza[0-9A-Za-z_-]{35}\b/g,
+    revokeUrl: 'https://console.cloud.google.com/apis/credentials',
   },
   {
     id: 'stripe-key',
@@ -48,6 +62,7 @@ export const patternRules: Rule[] = [
     severity: 'critical',
     category: 'pattern',
     pattern: /\b(?:sk|rk)_(?:live|test)_[A-Za-z0-9]{16,}\b/g,
+    revokeUrl: 'https://dashboard.stripe.com/apikeys',
   },
   {
     id: 'slack-token',
@@ -56,6 +71,7 @@ export const patternRules: Rule[] = [
     severity: 'high',
     category: 'pattern',
     pattern: /\bxox[baprs]-[A-Za-z0-9-]{10,}\b/g,
+    revokeUrl: 'https://api.slack.com/apps',
   },
   {
     id: 'jwt',
@@ -96,6 +112,7 @@ export const patternRules: Rule[] = [
     severity: 'critical',
     category: 'pattern',
     pattern: /\b(?:sk-(?:proj|admin)-[A-Za-z0-9_-]{32,}|sk-[A-Za-z0-9]{40,})\b/g,
+    revokeUrl: 'https://platform.openai.com/api-keys',
   },
   {
     id: 'anthropic-api-key',
@@ -104,6 +121,25 @@ export const patternRules: Rule[] = [
     severity: 'critical',
     category: 'pattern',
     pattern: /\bsk-ant-(?:api03-)?[A-Za-z0-9_-]{32,}\b/g,
+    revokeUrl: 'https://console.anthropic.com/settings/keys',
+  },
+  {
+    id: 'groq-api-key',
+    description: 'Potential Groq API key',
+    type: 'Possible Groq API Key',
+    severity: 'critical',
+    category: 'pattern',
+    pattern: /\bgsk_[A-Za-z0-9]{40,64}\b/g,
+    revokeUrl: 'https://console.groq.com/keys',
+  },
+  {
+    id: 'perplexity-api-key',
+    description: 'Potential Perplexity API key',
+    type: 'Possible Perplexity API Key',
+    severity: 'critical',
+    category: 'pattern',
+    pattern: /\bpplx-[A-Za-z0-9]{40,64}\b/g,
+    revokeUrl: 'https://www.perplexity.ai/settings/api',
   },
   {
     id: 'huggingface-token',
@@ -112,6 +148,7 @@ export const patternRules: Rule[] = [
     severity: 'critical',
     category: 'pattern',
     pattern: /\bhf_[A-Za-z0-9]{34,}\b/g,
+    revokeUrl: 'https://huggingface.co/settings/tokens',
   },
   {
     id: 'sendgrid-api-key',
@@ -120,6 +157,7 @@ export const patternRules: Rule[] = [
     severity: 'critical',
     category: 'pattern',
     pattern: /\bSG\.[A-Za-z0-9_-]{22}\.[A-Za-z0-9_-]{43}\b/g,
+    revokeUrl: 'https://app.sendgrid.com/settings/api_keys',
   },
   {
     id: 'resend-api-key',
@@ -128,6 +166,25 @@ export const patternRules: Rule[] = [
     severity: 'critical',
     category: 'pattern',
     pattern: /\bre_[A-Za-z0-9_]{30,}\b/g,
+    revokeUrl: 'https://resend.com/api-keys',
+  },
+  {
+    id: 'postman-api-key',
+    description: 'Potential Postman API key',
+    type: 'Possible Postman API Key',
+    severity: 'critical',
+    category: 'pattern',
+    pattern: /\bPMAK-[A-Za-z0-9]{40,80}\b/g,
+    revokeUrl: 'https://go.postman.co/settings/me/api-keys',
+  },
+  {
+    id: 'sentry-auth-token',
+    description: 'Potential Sentry Auth token',
+    type: 'Possible Sentry Auth Token',
+    severity: 'critical',
+    category: 'pattern',
+    pattern: /\bsntrys_[A-Za-z0-9]{40,80}\b/g,
+    revokeUrl: 'https://sentry.io/settings/account/api/auth-tokens/',
   },
   {
     id: 'twilio-account-sid',
@@ -136,5 +193,6 @@ export const patternRules: Rule[] = [
     severity: 'high',
     category: 'pattern',
     pattern: /\bAC[a-f0-9]{32}\b/gi,
+    revokeUrl: 'https://console.twilio.com/',
   },
 ];

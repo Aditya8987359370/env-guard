@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import ignore from 'ignore';
 import { customRules, loadConfig, validateSeverity } from './config/load.js';
-import { initialize } from './fixer/init.js';
+import { generateExampleEnv, initialize } from './fixer/init.js';
 import { installHook, uninstallHook } from './git/hook.js';
 import { scanHistory } from './git/history.js';
 import { stagedContent, stagedFiles } from './git/git.js';
@@ -67,7 +67,7 @@ const program = new Command();
 program
   .name('envguard')
   .description('Protect your secrets before they reach Git. All scans run locally.')
-  .version('1.4.0')
+  .version('1.5.0')
   .showSuggestionAfterError();
 program
   .command('scan [paths...]')
@@ -188,11 +188,43 @@ program
     }
   });
 program
-  .command('fix')
-  .description('Show safe remediation guidance; never rewrites source or Git history.')
-  .action(() => {
-    console.log(
-      'Safe remediation: rotate/revoke the credential, move it to an environment variable, add .env to .gitignore, update .env.example, and clean history only after reviewing Git documentation. Run `envguard init` to create missing safe starter files.',
-    );
+  .command('fix [paths...]')
+  .description(
+    'Show safe remediation guidance, analyze findings, and optionally update .env.example.',
+  )
+  .option('--generate-example', 'generate safe placeholders in .env.example for detected variables')
+  .action(async (paths, opts) => {
+    try {
+      console.log('=== EnvGuard Safe Remediation Guidance ===');
+      console.log('1. Rotate or revoke exposed credentials immediately with your provider.');
+      console.log('2. Move credentials to environment variables and ensure .env is in .gitignore.');
+      console.log('3. Clean Git history if needed (e.g. using git-filter-repo).');
+      console.log(
+        'Run `envguard init` to create missing safe starter files (.gitignore, .env.example, .envguard.yml).\n',
+      );
+      const config = loadConfig(root);
+      const scanPathsTarget = resolvedScanPaths(root, paths, config);
+      const result = await scanPaths(root, scanPathsTarget, config);
+      if (result.findings.length > 0) {
+        console.log(`Identified ${result.findings.length} credential(s) needing remediation:`);
+        for (const f of result.findings) {
+          const revoke = f.revokeUrl ? `\n    -> Revoke URL: ${f.revokeUrl}` : '';
+          console.log(`  - ${f.file}:${f.line} [${f.severity.toUpperCase()}] ${f.type}${revoke}`);
+        }
+        if (opts.generateExample) {
+          const keys = result.findings.map((f) => f.ruleId.replace(/-/g, '_').toUpperCase());
+          const added = await generateExampleEnv(root, keys);
+          if (added.length > 0) {
+            console.log(`\nUpdated .env.example with safe placeholders for: ${added.join(', ')}`);
+          } else {
+            console.log('\n.env.example already contains placeholders for all detected keys.');
+          }
+        }
+      } else {
+        console.log('No secrets detected in current scan paths. All clear!');
+      }
+    } catch (error) {
+      fail(error);
+    }
   });
 program.parseAsync().catch(fail);
